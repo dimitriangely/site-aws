@@ -23,9 +23,8 @@ jobs:
           sudo apt install -y awscli
 
       - name: Afficher la version choisie
-        run: echo "Version déployée : $VERSION"
-        env:
-          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          echo "✅ Version déployée : ${{ github.event.inputs.version }}"
 
       - name: Déployer sur le bucket S3 (Production)
         env:
