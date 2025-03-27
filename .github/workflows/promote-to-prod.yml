@@ -26,6 +26,36 @@ jobs:
         run: |
           echo "✅ Version déployée : ${{ github.event.inputs.version }}"
 
+      - name: Vérifier si la version existe déjà
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-west-3
+        run: |
+          if aws s3 ls "s3://adh-web-website-2025/releases/RELEASE-${{ github.event.inputs.version }}.md" ; then
+            echo "❌ La version ${{ github.event.inputs.version }} existe déjà. Stop du déploiement."
+            exit 1
+          else
+            echo "✅ Version libre, on continue."
+          fi
+
+      - name: Créer le fichier RELEASE.md
+        run: |
+          echo "## 🚀 Déploiement Production" > RELEASE.md
+          echo "" >> RELEASE.md
+          echo "- 📦 Version : ${{ github.event.inputs.version }}" >> RELEASE.md
+          echo "- 👤 Déployé par : ${{ github.actor }}" >> RELEASE.md
+          echo "- 🗓️ Date : $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> RELEASE.md
+          echo "- 📁 Bucket : adh-web-website-2025" >> RELEASE.md
+
+      - name: Uploader RELEASE.md dans S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-west-3
+        run: |
+          aws s3 cp RELEASE.md s3://adh-web-website-2025/releases/RELEASE-${{ github.event.inputs.version }}.md
+
       - name: Déployer sur le bucket S3 (Production)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
